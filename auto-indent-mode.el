@@ -218,10 +218,10 @@
 ;;           (goto-char (point-min))
 ;;           (while (re-search-forward "^[ \t]*[>][ \t]+" nil t)
 ;;             (replace-match "")
-;;             (goto-char (point-at-eol))
+;;             (goto-char (pos-eol))
 ;;             (while (looking-at "[ \t\n]*[+][ \t]+")
 ;;               (replace-match "\n")
-;;               (goto-char (point-at-eol))))))))
+;;               (goto-char (pos-eol))))))))
 ;;   
 ;;   (defun kicker-ess-turn-on-fix-code ()
 ;;     (interactive)
@@ -941,7 +941,7 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'cl))
+  (require 'cl-lib))
 
 (defgroup auto-indent nil
   "Auto Indent Mode Customizations"
@@ -1792,7 +1792,7 @@ http://www.emacswiki.org/emacs/AutoIndentation
   (when auto-indent-fix-org-return
     (let ((bh (org-babel-where-is-src-block-head)))
       (when bh
-        (unless (= (point-at-bol) bh)
+        (unless (= (pos-bol) bh)
           ;; Indent line
           (org-babel-do-in-edit-buffer
            (indent-according-to-mode)))))))
@@ -1880,18 +1880,18 @@ languages are defined in `auto-indent-multiple-indent-modes.'"
   (cond
    ((memq major-mode auto-indent-multiple-indent-modes)
     (let ((indent-list '())
-          (first-indent (buffer-substring (point-at-bol) (point-at-eol)))
+          (first-indent (buffer-substring (pos-bol) (pos-eol)))
           (call-mm major-mode)
           ;; (indent-trial-1
-          ;;  (buffer-substring (point-at-bol 0) (point)))
+          ;;  (buffer-substring (pos-bol 0) (point)))
           (indent-trial-1
            (buffer-substring (point-min) (point)))
           ;; (indent-trial-2
-          ;;  (buffer-substring (point) (point-at-eol 2)))
+          ;;  (buffer-substring (point) (pos-eol 2)))
           (indent-trial-2
            (buffer-substring (point) (point-max)))
           tmp
-          (new-pt (- (point) (point-at-bol 0)))
+          (new-pt (- (point) (pos-bol 0)))
           (should-indent-p t))
       (with-temp-buffer
         (call-interactively call-mm)
@@ -2226,7 +2226,7 @@ If at end of line, obey `auto-indent-kill-line-at-eol'
                    ((memq auto-indent-kill-line-at-eol '(whole-line blanks))
                     (if (> (prefix-numeric-value current-prefix-arg) 0)
                         (save-excursion
-                          (delete-region (point) (point-at-eol))
+                          (delete-region (point) (pos-eol))
                           (unless (eobp)
                             (forward-line 1)
                             (when (eq auto-indent-kill-line-at-eol 'blanks)
@@ -2583,7 +2583,7 @@ around and the whitespace was deleted from the line."
                        (save-excursion
                          (let ((case-fold-search t)
                                (cs (condition-case err
-                                       (comment-search-backward (point-at-bol) t)
+                                       (comment-search-backward (pos-bol) t)
                                      (error nil))))
                            (when cs
                              (skip-chars-backward " \t")
@@ -2606,15 +2606,15 @@ around and the whitespace was deleted from the line."
                     ;; Remove the trailing white-space after indentation because
                     ;; indentation may introduce the whitespace.
                     (save-restriction
-                      (narrow-to-region (point-at-bol) (point-at-eol))
+                      (narrow-to-region (pos-bol) (pos-eol))
                       (delete-trailing-whitespace)))))
               ;; Use mode's smart indent on a first line.
               (cond
                ((and (memq major-mode auto-indent-multiple-indent-modes)
                      (string-match
                       "^[ \t]*$"
-                      (buffer-substring (point-at-bol 0) (point-at-eol 0))))
-                (let ((last-indent (buffer-substring (point-at-bol 0) (point-at-eol 0))))
+                      (buffer-substring (pos-bol 0) (pos-eol 0))))
+                (let ((last-indent (buffer-substring (pos-bol 0) (pos-eol 0))))
                   (with-temp-buffer
                     (insert last-indent)
                     (setq last-indent (current-indentation)))
